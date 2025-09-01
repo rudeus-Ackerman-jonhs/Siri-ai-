@@ -1,78 +1,79 @@
-const axios = require("axios");
-const fs = require("fs-extra");
-const path = require("path");
+const fs = require("fs");
+const os = require("os");
 
 module.exports = {
   config: {
-    name: "uptime",
-    aliases: ["up2"],
-    version: "1.0",
-    author: "Raphael", //Don't change Author 
+    name: "up2",
+    aliases: ["uptime", "up"],
+    version: "2.2",
+    author: "𝗥𝗨𝗗𝗘𝗨𝗦 𝗔𝗖𝗞𝗘𝗥𝗠𝗔𝗡",
     role: 0,
     shortDescription: {
-      en: "Displays the uptime of the bot."
+      en: "Displays bot uptime, stats and system info in cool serif style."
     },
     longDescription: {
-      en: "Displays the amount of time that the bot has been running for."
+      en: "Shows uptime, user & group stats, commands usage, system info, all in fancy serif font with frames and emojis 🍭."
     },
-    category: "utility",
+    category: "system",
     guide: {
-      en: "Use {p}uptime to display the uptime of the bot."
+      en: "Use {p}up2 to see all bot stats in a stylish serif format."
     }
   },
-  onStart: async function ({ api, event, args }) {
+  onStart: async function ({ api, event, usersData, threadsData }) {
     try {
-      // Calculate uptime
       const uptime = process.uptime();
-      const secondsLeft = Math.floor(uptime % 60);
-      const minutes = Math.floor((uptime / 60) % 60);
-      const hours = Math.floor((uptime / (60 * 60)) % 24);
-      const days = Math.floor(uptime / (60 * 60 * 24));
-      const uptimeString = `${days} 𝙳𝚊𝚢𝚜 ${hours} 𝙷𝚘𝚞𝚛𝚜 ${minutes} 𝙼𝚒𝚗𝚞𝚝𝚎𝚜 ${secondsLeft} 𝚂𝚎𝚌𝚘𝚗𝚍𝚜`;
+      const days = Math.floor(uptime / 86400);
+      const hours = Math.floor((uptime % 86400) / 3600);
+      const minutes = Math.floor((uptime % 3600) / 60);
+      const seconds = Math.floor(uptime % 60);
 
-      // Bot information
-      const botname = "  ZetBot"; // Replace with your actual bot name
-      const insta = "YazidDiz95"; // Replace with your Instagram handle
-      const github = "YazidGit"; // Replace with your GitHub handle
-      const fb = "Zetsu"; // Replace with your Facebook handle
+      const totalUsers = (await usersData.getAll()).length;
+      const totalGroups = (await threadsData.getAll()).length;
 
-      // Prepare the API URL for image generation
-      const apiUrl = `https://deku-rest-api.gleeze.com/canvas/uptime?id=4&instag=${insta}&ghub=${github}&fb=${fb}&hours=${hours}&minutes=${minutes}&seconds=${secondsLeft}&botname=${botname}`;
+      const cpuUsage = os.loadavg()[0] * 10;
+      const totalMemory = (os.totalmem() / (1024 ** 3)).toFixed(2);
+      const freeMemory = (os.freemem() / (1024 ** 3)).toFixed(2);
+      const usedMemory = (totalMemory - freeMemory).toFixed(2);
+      const status =
+        cpuUsage > 90 || usedMemory / totalMemory > 0.9
+          ? "🔴| 𝐅𝐚𝐢𝐛𝐥𝐞"
+          : cpuUsage > 70 || usedMemory / totalMemory > 0.8
+          ? "🟡| 𝐌𝐨𝐲𝐞𝐧"
+          : "🟢| 𝐄𝐱𝐜𝐞𝐥𝐥𝐞𝐧𝐭";
 
-      
-      const tempDir = './temp';
-      if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir);
-      }
+      const message = `
+🌿 𝐂𝐥𝐞𝐯𝐞𝐫𝐬𝐭𝐨𝐧𝐞 𝐀𝐈 🌿
+◆━━━━━◆❃◆━━━━━◆
 
-      const attachmentPath = path.join(tempDir, `uptime_${event.senderID}.png`);
+╭── 𝑼𝑷𝑻𝑰𝑴𝐸 𝑰𝑵𝐅𝑶 ──╮
+│ 𝐁𝐨𝐭 : 𝐂𝐥𝐞𝐯𝐞𝐫𝐬𝐭𝐨𝐧𝐞 𝐀𝐈
+│ 𝐎𝐰𝐧𝐞𝐫 : 𝗥𝗨𝗗𝗘𝗨𝗦 𝗔𝗖𝗞𝗘𝗥𝗠𝗔𝗡
+│ 𝐏𝐫𝐞𝐟𝐢𝐱 : ~
+╰────────────╯
 
-      // Fetch the image from the API
-      const response = await axios.get(apiUrl, { responseType: 'stream' });
-      const writer = fs.createWriteStream(attachmentPath);
-      response.data.pipe(writer);
+╭── ⏳ 𝑻𝑬𝑴𝑷𝑺 𝑫𝐄 𝑺𝐄𝑹𝑽𝐈𝑪𝐄 ──╮
+│ ${days} 𝑗𝑜𝑢𝑟𝑠, ${hours} 𝐡𝑒𝑢𝐫𝑒𝑠 🍭
+│ ${minutes} 𝑚𝑖𝑛𝑢𝑡𝑒𝑠, ${seconds} 𝑠𝑒𝑐𝑜𝑛𝑑𝑒𝑠 🍭
+╰────────────╯
 
-  
-      writer.on('finish', async () => {
-        const message = `𝗛𝗲𝗹𝗹𝗼 𝗠𝗮𝘀𝘁𝗲𝗿~ 🐼,\n\n 🫶 𝙔𝙤𝙪𝙧 𝙗𝙤𝙩 𝙞𝙨 𝙧𝙪𝙣𝙣𝙞𝙣𝙜 𝙛𝙧𝙤𝙢\n\n ${uptimeString}.`;
+╭── 🌍 𝑺𝑻𝑨𝑻𝑺 ──╮
+│ 𝐔𝐬𝐞𝐫𝐬 : ${totalUsers} 🍭
+│ 𝐆𝐫𝐨𝐮𝐩𝐬 : ${totalGroups} 🍭
+│ 𝐂𝐨𝐦𝐦𝐚𝐧𝐝𝐬 𝐔𝐬𝐞𝐝 : ${global.GoatBot.commands.size} 🍭
+╰────────────╯
 
-        await api.sendMessage({
-          body: message,
-          attachment: fs.createReadStream(attachmentPath)
-        }, event.threadID, () => {
-          fs.unlinkSync(attachmentPath);
-        });
-      });
+╭── 💻 𝑺𝒀𝑺𝑻𝑬𝑴 𝑰𝑵𝐅𝑶 ──╮
+│ 𝐎𝐒 : ${os.type()} ${os.release()} 🍭
+│ 𝐂𝐏𝐔 : ${cpuUsage.toFixed(2)} % 🍭
+│ 𝐑𝐀𝐌 : ${usedMemory}/${totalMemory} 𝐆𝐁 🍭
+│ 𝐒𝐭𝐚𝐭𝐮𝐬 : ${status} 🍭
+╰────────────╯
+`;
 
-      // Handle errors during the writing process
-      writer.on('error', (err) => {
-        console.error("Error writing the file:", err);
-        api.sendMessage("Unable to retrieve uptime image. Error: " + err.message, event.threadID);
-      });
-
-    } catch (error) {
-      console.error("Error in uptime command:", error);
-      api.sendMessage("Unable to display uptime information.", event.threadID);
+      api.sendMessage(message, event.threadID);
+    } catch (err) {
+      console.error(err);
+      api.sendMessage("❌ 𝐄𝐫𝐫𝐞𝐮𝐫 𝐚𝐮 𝐜𝐡𝐚𝐫𝐠𝐞𝐦𝐞𝐧𝐭 𝐝𝐞𝐬 𝐢𝐧𝐟𝐨𝐬.", event.threadID);
     }
   }
 };
